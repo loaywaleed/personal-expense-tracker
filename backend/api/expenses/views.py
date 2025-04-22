@@ -1,6 +1,9 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+    ListAPIView,
+)
+from rest_framework.permissions import IsAuthenticated
 from .serializers import ExpenseSerializer, CategorySerializer
 from .models import Expense, Category
 
@@ -32,7 +35,7 @@ class ExpenseRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
         serializer.save(user=self.request.user)
 
 
-class CategoryListCreateView(ListCreateAPIView):
+class CategoryListView(ListAPIView):
     """
     global view to get categories (will probably hardcode it)
     """

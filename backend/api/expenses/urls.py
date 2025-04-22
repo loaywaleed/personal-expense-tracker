@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     ExpenseListCreateView,
     ExpenseRetrieveUpdateDestroyView,
-    CategoryListCreateView,
+    CategoryListView,
 )
 
 
@@ -13,5 +13,5 @@ urlpatterns = [
         ExpenseRetrieveUpdateDestroyView.as_view(),
         name="expense-retrieve-update-destroy",
     ),
-    path("categories", CategoryListCreateView.as_view(), name="category-list-create"),
+    path("categories", CategoryListView.as_view(), name="category-list-create"),
 ]
