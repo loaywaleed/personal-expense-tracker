@@ -1,7 +1,7 @@
 *venv
 .vscode
 
-*.sqlite
+*.sqlite3
 *pyc
 __pycache__
 *.pyo
