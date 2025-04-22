@@ -3,6 +3,10 @@ from .models import Expense, Category
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """
+    Input/output Serializer for the Category model.
+    """
+
     class Meta:
         model = Category
         fields = ["id", "name"]
@@ -10,12 +14,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
+    """
+    Input/Output serializer for the Expense model.
+    """
 
     category_name = serializers.ReadOnlyField(source="category.name")
 
     class Meta:
         model = Expense
-
         fields = [
             "id",
             "category",
