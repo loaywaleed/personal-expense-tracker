@@ -6,6 +6,7 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAuthenticated
 from .serializers import ExpenseSerializer, CategorySerializer
 from .models import Expense, Category
+from .filters import ExpenseFilter
 
 
 class ExpenseListCreateView(ListCreateAPIView):
@@ -16,6 +17,7 @@ class ExpenseListCreateView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ExpenseSerializer
     queryset = Expense.objects.all()
+    filterset_class = ExpenseFilter
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
