@@ -16,8 +16,10 @@ class ExpenseListCreateView(ListCreateAPIView):
 
     permission_classes = [IsAuthenticated]
     serializer_class = ExpenseSerializer
-    queryset = Expense.objects.all()
     filterset_class = ExpenseFilter
+
+    def get_queryset(self):
+        return Expense.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -29,9 +31,10 @@ class ExpenseRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-
     serializer_class = ExpenseSerializer
-    queryset = Expense.objects.all()
+
+    def get_queryset(self):
+        return Expense.objects.filter(user=self.request.user)
 
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
