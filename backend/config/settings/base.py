@@ -91,7 +91,7 @@ SIMPLE_JWT = {
 
 # AllAuth Settings
 AUTH_USER_MODEL = "users.User"
-ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = [
     "first_name",
     "last_name",
