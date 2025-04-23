@@ -32,6 +32,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", default="secret_key")
 INSTALLED_APPS = [
     # core apps
     "django.contrib.admin",
+    "corsheaders",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -47,7 +48,6 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    "corsheaders",
     "django_filters",
     # local apps
     "api.users",
