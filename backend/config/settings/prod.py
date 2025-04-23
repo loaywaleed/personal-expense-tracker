@@ -2,8 +2,8 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
-C0RS_ALLOW_CREDENTIALS = True
+ALLOWED_HOSTS = ["http://127.0.0.1:5173"]
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     # "https://yourdomain.com",
     # "https://www.yourdomain.com",
