@@ -3,8 +3,12 @@ from .base import *
 DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
-CORS_ALLOW_ALL_ORIGINS = True
 C0RS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    # "https://yourdomain.com",
+    # "https://www.yourdomain.com",
+    "http://127.0.0.1:5173",
+]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 SECURE_SSL_REDIRECT = True
