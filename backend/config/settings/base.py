@@ -91,17 +91,20 @@ SIMPLE_JWT = {
 
 # AllAuth Settings
 AUTH_USER_MODEL = "users.User"
-ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_LOGIN_METHODS = {"email"}  # Set to use email only
 ACCOUNT_SIGNUP_FIELDS = [
     "first_name",
     "last_name",
-    "email*",
-    "password1*",
-    "password2*",
+    "email",
+    "password1",
+    "password2",
 ]
 
-
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+SILENCED_SYSTEM_CHECKS = [
+    "account.W001",
+]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
