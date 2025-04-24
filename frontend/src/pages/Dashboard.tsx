@@ -1,61 +1,67 @@
 import { useAuth } from "../hooks/useAuth";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getExpenses,
   addExpense,
-  updateExpense,
   deleteExpense,
   getCategories,
 } from "../lib/api";
-import { Expense, ExpenseCategory, PaymentMethod } from "../types/expense";
+import { Expense, ExpenseCategory } from "../types/expense";
 
 function Dashboard() {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    category: "",
+    exactDate: "",
+  });
   type FormState = {
     amount: string;
     date: string;
-    category: ExpenseCategory | "";
+    category: number;
     description: string;
-    paymentMethod: PaymentMethod | "";
   };
   const [form, setForm] = useState<FormState>({
     amount: "",
-    date: "",
-    category: "",
+    date: new Date().toISOString().split("T")[0],
+    category: 1,
     description: "",
-    paymentMethod: "Other",
   });
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<FormState>(form);
 
-  useEffect(() => {
-    fetchExpenses();
-    fetchCategories();
-  }, []);
-
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getExpenses();
+      const data = await getExpenses({
+        date_from: filters.exactDate || filters.startDate || undefined,
+        date_to: filters.exactDate || filters.endDate || undefined,
+        category: filters.category || undefined,
+      });
       setExpenses(data);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
       setCategories(data as ExpenseCategory[]);
-      // Set default category if available
       if (data.length > 0) {
         setForm((f) => ({
           ...f,
-          category: data[0] as ExpenseCategory,
-          paymentMethod: f.paymentMethod || "Other",
+          category: data[0].id,
         }));
       }
     } catch (err) {
@@ -66,72 +72,55 @@ function Dashboard() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const value =
+      e.target.name === "category" ? Number(e.target.value) : e.target.value;
+    setForm({ ...form, [e.target.name]: value });
+  };
+
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+
     await addExpense({
       amount: Number(form.amount),
       date: form.date,
-      category: form.category as ExpenseCategory,
+      category: form.category,
       description: form.description,
-      paymentMethod: form.paymentMethod as PaymentMethod,
     });
+
     setForm({
       amount: "",
-      date: "",
-      category: categories.length > 0 ? categories[0] : "",
+      date: new Date().toISOString().split("T")[0],
+      category: categories.length > 0 ? categories[0].id : 0,
       description: "",
-      paymentMethod: "Other",
     });
     fetchExpenses();
   };
 
-  const handleEditChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
-  };
-
-  const handleEdit = (expense: Expense) => {
-    setEditingId(expense.id);
-    setEditForm({
-      amount: String(expense.amount),
-      date: expense.date,
-      category: expense.category,
-      description: expense.description,
-      paymentMethod: expense.paymentMethod,
-    });
-  };
-
-  const handleUpdate = async (id: string) => {
-    await updateExpense(id, {
-      amount: Number(editForm.amount),
-      date: editForm.date,
-      category: editForm.category as ExpenseCategory,
-      description: editForm.description,
-      paymentMethod: editForm.paymentMethod as PaymentMethod,
-    });
-    setEditingId(null);
-    fetchExpenses();
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     await deleteExpense(id);
     fetchExpenses();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-4">
-            Dashboard
-          </h1>
-          <p className="mt-2 text-gray-600">Welcome back, {user?.email}</p>
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {user?.email}</p>
+          </div>
+
           <form
-            className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4"
+            className="mb-8 space-y-4 md:space-y-0 md:grid md:grid-cols-5 md:gap-4"
             onSubmit={handleAdd}
           >
             <input
@@ -141,7 +130,7 @@ function Dashboard() {
               value={form.amount}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors"
             />
             <input
               name="date"
@@ -149,17 +138,18 @@ function Dashboard() {
               value={form.date}
               onChange={handleChange}
               required
-              className="border p-2 rounded"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors"
             />
             <select
               name="category"
               value={form.category}
               onChange={handleChange}
-              className="border p-2 rounded"
+              required
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors"
             >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
                 </option>
               ))}
             </select>
@@ -168,153 +158,122 @@ function Dashboard() {
               placeholder="Description"
               value={form.description}
               onChange={handleChange}
-              className="border p-2 rounded"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors"
             />
-            <select
-              name="paymentMethod"
-              value={form.paymentMethod}
-              onChange={handleChange}
-              className="border p-2 rounded"
-            >
-              {[
-                "Credit Card",
-                "Debit Card",
-                "Cash",
-                "Bank Transfer",
-                "Mobile Payment",
-                "Other",
-              ].map((pm) => (
-                <option key={pm} value={pm}>
-                  {pm}
-                </option>
-              ))}
-            </select>
             <button
               type="submit"
-              className="btn btn-primary col-span-1 md:col-auto"
+              className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
             >
-              Add
+              Add Expense
             </button>
           </form>
+
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Filter Expenses</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Exact Date
+                </label>
+                <input
+                  type="date"
+                  name="exactDate"
+                  value={filters.exactDate}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  value={filters.startDate}
+                  disabled={!!filters.exactDate}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  name="endDate"
+                  value={filters.endDate}
+                  disabled={!!filters.exactDate}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={filters.category}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
           {loading ? (
-            <div>Loading...</div>
+            <div className="flex justify-center py-8">
+              <div className="text-gray-600">Loading...</div>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border">
-                <thead>
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-2 py-1 border">Amount</th>
-                    <th className="px-2 py-1 border">Date</th>
-                    <th className="px-2 py-1 border">Category</th>
-                    <th className="px-2 py-1 border">Description</th>
-                    <th className="px-2 py-1 border">Payment</th>
-                    <th className="px-2 py-1 border">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {expenses.map((exp) => (
-                    <tr key={exp.id}>
-                      {editingId === exp.id ? (
-                        <>
-                          <td className="border">
-                            <input
-                              name="amount"
-                              type="number"
-                              value={editForm.amount}
-                              onChange={handleEditChange}
-                              className="border p-1 rounded w-20"
-                            />
-                          </td>
-                          <td className="border">
-                            <input
-                              name="date"
-                              type="date"
-                              value={editForm.date}
-                              onChange={handleEditChange}
-                              className="border p-1 rounded w-28"
-                            />
-                          </td>
-                          <td className="border">
-                            <select
-                              name="category"
-                              value={editForm.category}
-                              onChange={handleEditChange}
-                              className="border p-1 rounded"
-                            >
-                              {categories.map((cat) => (
-                                <option key={cat} value={cat}>
-                                  {cat}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="border">
-                            <input
-                              name="description"
-                              value={editForm.description}
-                              onChange={handleEditChange}
-                              className="border p-1 rounded w-32"
-                            />
-                          </td>
-                          <td className="border">
-                            <select
-                              name="paymentMethod"
-                              value={editForm.paymentMethod}
-                              onChange={handleEditChange}
-                              className="border p-1 rounded"
-                            >
-                              {[
-                                "Credit Card",
-                                "Debit Card",
-                                "Cash",
-                                "Bank Transfer",
-                                "Mobile Payment",
-                                "Other",
-                              ].map((pm) => (
-                                <option key={pm} value={pm}>
-                                  {pm}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="border space-x-2">
-                            <button
-                              className="btn btn-primary"
-                              onClick={() => handleUpdate(exp.id)}
-                            >
-                              Save
-                            </button>
-                            <button
-                              className="btn btn-outline"
-                              onClick={() => setEditingId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="border">{exp.amount}</td>
-                          <td className="border">{exp.date}</td>
-                          <td className="border">{exp.category}</td>
-                          <td className="border">{exp.description}</td>
-                          <td className="border">{exp.paymentMethod}</td>
-                          <td className="border space-x-2">
-                            <button
-                              className="btn btn-outline"
-                              onClick={() => handleEdit(exp)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => handleDelete(exp.id)}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </>
-                      )}
+                    <tr
+                      key={exp.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4">${exp.amount}</td>
+                      <td className="px-6 py-4">{exp.date}</td>
+                      <td className="px-6 py-4">{exp.category_name}</td>
+                      <td className="px-6 py-4">{exp.description}</td>
+                      <td className="px-6 py-4 space-x-2">
+                        <button
+                          className="px-3 py-1 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                          onClick={() => handleDelete(exp.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

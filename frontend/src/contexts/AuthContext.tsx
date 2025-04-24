@@ -16,7 +16,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      const { data } = await api.get<{ user: User }>("/auth/user");
+      const { data } = await api.get<{ user: User }>("/auth/user", {
+        withCredentials: true,
+      });
       setUser(data.user);
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -38,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/auth/login",
         credentials,
         {
-          withCredentials: false,
+          withCredentials: true,
         }
       );
       setUser(data.user);
@@ -58,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "/auth/register",
         credentials,
         {
-          withCredentials: false,
+          withCredentials: true,
         }
       );
       setUser(data.user);
@@ -66,20 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       if (error instanceof AxiosError) {
         const message = error.response?.data?.message || "Registration failed";
-        toast.error(message);
-      }
-      throw error;
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      await api.post("/auth/reset-password", { email });
-      toast.success("Password reset instructions sent to your email");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        const message =
-          error.response?.data?.message || "Failed to send reset instructions";
         toast.error(message);
       }
       throw error;
@@ -100,9 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, login, register, resetPassword, logout, isLoading }}
-    >
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

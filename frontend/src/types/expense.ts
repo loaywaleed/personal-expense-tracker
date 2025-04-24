@@ -1,49 +1,49 @@
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export interface ExpenseCategory {
+  id: number;
+  name: string;
+}
+
 export interface Expense {
-  id: string;
+  id: number;
   userId: string;
   amount: number;
   date: string;
   category: ExpenseCategory;
+  category_name: string;
   description: string;
-  paymentMethod: PaymentMethod;
-  receiptUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type ExpenseCategory =
-  | 'Food & Dining'
-  | 'Transportation'
-  | 'Shopping'
-  | 'Entertainment'
-  | 'Bills & Utilities'
-  | 'Health & Fitness'
-  | 'Travel'
-  | 'Education'
-  | 'Business'
-  | 'Other';
-
-export type PaymentMethod =
-  | 'Credit Card'
-  | 'Debit Card'
-  | 'Cash'
-  | 'Bank Transfer'
-  | 'Mobile Payment'
-  | 'Other';
+export interface CreateExpense {
+  amount: number;
+  date: string;
+  category: number;
+  description: string;
+}
 
 export interface ExpenseFilters {
-  startDate?: string;
-  endDate?: string;
-  categories?: ExpenseCategory[];
+  date?: string;
+  date_from?: string;
+  date_to?: string;
+  category?: string;
   minAmount?: number;
   maxAmount?: number;
-  paymentMethods?: PaymentMethod[];
   search?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface ExpenseSortOptions {
-  field: 'date' | 'amount' | 'category';
-  direction: 'asc' | 'desc';
+  field: "date" | "amount" | "category";
+  direction: "asc" | "desc";
 }
 
 export interface Budget {
@@ -51,7 +51,7 @@ export interface Budget {
   userId: string;
   category: ExpenseCategory;
   amount: number;
-  period: 'monthly' | 'weekly' | 'yearly';
+  period: "monthly" | "weekly" | "yearly";
   startDate: string;
   endDate?: string;
   createdAt: string;
