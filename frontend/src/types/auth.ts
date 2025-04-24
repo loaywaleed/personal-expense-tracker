@@ -15,6 +15,10 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterCredentials extends LoginCredentials {
-  name?: string;
+export interface RegisterCredentials {
+  email: string;
+  password1: string;
+  password2: string; // Confirm password field
+  first_name: string;
+  last_name: string;
 }
