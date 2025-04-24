@@ -74,17 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = async () => {
-    try {
-      await api.post("/auth/logout", {}, { withCredentials: true });
-      setUser(null);
-      toast.success("Successfully logged out");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        const message = error.response?.data?.message || "Logout failed";
-        toast.error(message);
-      }
-    }
+  const logout = () => {
+    setUser(null);
+    document.cookie =
+      "ecomm-refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    toast.success("Successfully logged out");
   };
 
   return (
