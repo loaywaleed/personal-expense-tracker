@@ -279,7 +279,7 @@ function Dashboard() {
                       key={exp.id}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-6 py-4">${exp.amount}</td>
+                      <td className="px-6 py-4">{exp.amount} EGP</td>
                       <td className="px-6 py-4">{exp.date}</td>
                       <td className="px-6 py-4">{exp.category_name}</td>
                       <td className="px-6 py-4">{exp.description}</td>
